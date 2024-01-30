@@ -20,7 +20,7 @@ async def start(message: Message):
     await message.answer("Aloha!", reply_markup=main_kb)
 
 
-@dp.message(F.text.lower() == "афиша")
+@dp.message(F.text.lower() == "афиша [с картинками]")
 async def events(message: Message):
     string.Template(message.text).safe_substitute()
     theatre_events = parser.get_events_json()['events']
@@ -28,6 +28,17 @@ async def events(message: Message):
         img_url = event['posterImage']['url']
 
         await bot.send_photo(message.chat.id, photo=img_url, caption=get_event_template(event))
+
+
+@dp.message(F.text.lower() == "афиша [список]")
+async def events(message: Message):
+    string.Template(message.text).safe_substitute()
+    theatre_events = parser.get_events_json()['events']
+    response_text = 'Афиша:\n'
+    for event in theatre_events:
+        response_text += get_event_template(event)
+        response_text += '-' * 24
+    await message.answer(response_text)
 
 
 async def main():

@@ -6,7 +6,10 @@ from aiogram.types import (
 main_kb = ReplyKeyboardMarkup(
     keyboard=[
         [
-            KeyboardButton(text="Афиша")
+            KeyboardButton(text="Афиша [с картинками]")
+        ],
+        [
+            KeyboardButton(text="Афиша [список]")
         ]
     ],
     resize_keyboard=True,
