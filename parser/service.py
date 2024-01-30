@@ -4,6 +4,14 @@ import json
 
 import config
 
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+
+engine = create_engine("sqlite:///" + config.THEATRE_DB_PATH)
+Session = sessionmaker(bind=engine)
+session = Session()
+
 
 class TheatreParser:
     def __get_new_key(self):
@@ -16,7 +24,7 @@ class TheatreParser:
         buy_button = soup.find('a', {'class': 'red_button'}).first()
         return buy_button['data-radario-widget-key']
 
-    def get_events(self) -> dict:
+    def get_events_json(self) -> dict:
         data = {
             'key': config.RADARIO_QUERY_KEY,
             'page': 0,
@@ -38,7 +46,28 @@ class TheatreParser:
 
     def save_to_file(self, filename: str = 'events') -> None:
         with open(filename+'.json', 'w') as file_json:
-            json.dump(self.get_events(), file_json)
+            json.dump(self.get_events_json(), file_json)
+
+    def write_events_to_db(self) -> None:
+        events: dict = self.get_events_json()['events']
+        from models import Event
+        from datetime import datetime
+
+        for event in events:
+            session.add(Event(
+                event_id=event.get('id'),
+                title=event.get('title'),
+                min_price=event.get('minPrice'),
+                max_price=event.get('maxPrice'),
+                ticket_count=event.get('ticketCount'),
+                begin_date=datetime.strptime(event.get('beginDate'), '%Y-%m-%dT%H:%M:%S.%f%z'),
+                end_date=datetime.strptime(event.get('endDate'), '%Y-%m-%dT%H:%M:%S.%f%z'),
+                poster_image_url=event['posterImage']['url'],
+                sales_stopped=event.get('salesStopped'),
+                ended=event.get('ended')
+            ))
+        session.commit()
 
 
-TheatreParser().get_events()
+# TheatreParser().get_events_json()
+# TheatreParser().write_events_to_db()
