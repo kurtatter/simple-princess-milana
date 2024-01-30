@@ -1,8 +1,12 @@
+from typing import List
+
 import requests
 from bs4 import BeautifulSoup
 import json
+from datetime import datetime
 
 import config
+from models import Event
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -49,10 +53,13 @@ class TheatreParser:
 
     def write_events_to_db(self) -> None:
         events: dict = self.get_events_json()['events']
-        from models import Event
-        from datetime import datetime
 
-        print(session.query(Event).all())
+        db_events = session.query(Event).all()
+        revision_count = 0
+
+        if len(db_events) > 0:
+            last_event = db_events[-1]
+            revision_count = last_event.revision + 1
 
         for event in events:
             session.add(Event(
@@ -66,10 +73,36 @@ class TheatreParser:
                 poster_image_url=event['posterImage']['url'],
                 sales_stopped=event.get('salesStopped'),
                 ended=event.get('ended'),
-                revision=0
+                revision=revision_count
             ))
         session.commit()
 
+    def get_new_events(self) -> List:
+        events: List[dict] = self.get_events_json()['events']
+        db_events = session.query(Event).all()
 
-# TheatreParser().get_events_json()
-# TheatreParser().write_events_to_db()
+        if len(db_events) > 0:
+            last_revision_number = db_events[-1].revision
+            last_events = session.query(Event).filter(Event.revision == last_revision_number).all()
+
+            last_events_ids = set(
+                [event.event_id for event in last_events]
+            )
+
+            new_events_ids = set(
+                [event['id'] for event in events]
+            )
+
+            new_events = new_events_ids - last_events_ids
+            new_events_from_db = []
+            self.write_events_to_db()
+
+            if len(new_events) > 0:
+                for new_event_id in new_events:
+                    new_events_from_db.append(
+                        session.query(Event).filter(Event.event_id == new_event_id).first()
+                    )
+                return new_events_from_db
+        self.write_events_to_db()
+        return []
+

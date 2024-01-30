@@ -2,6 +2,8 @@ import string
 
 from aiogram.utils.markdown import hlink
 
+from models import Event
+
 event_template_text = '''
 <b>$title</b>
 
@@ -56,5 +58,20 @@ def get_event_template(event: dict) -> str:
         'ticketDate': format_event_date(event['beginDate']),
         'buyTicket': 'Билетов нет' if sales_stopped else hlink('Купить',
                                                                config.THEATRE_EVENT_URL + str(event["id"]))
+    }
+    return string.Template(event_template_text).safe_substitute(template_values)
+
+
+def get_event_template_from_db(event: Event) -> str:
+    sales_stopped = event.sales_stopped
+
+    import config
+    template_values = {
+        'title': event.title,
+        'ticketCount': 'Билетов нет' if sales_stopped else event.ticket_count,
+        'ticketPrice': 'Билетов нет' if sales_stopped else f'от {event.min_price:0.0f} до {event.max_price:0.0f}',
+        'ticketDate': event.begin_date,
+        'buyTicket': 'Билетов нет' if sales_stopped else hlink('Купить',
+                                                               config.THEATRE_EVENT_URL + str(event.event_id))
     }
     return string.Template(event_template_text).safe_substitute(template_values)
