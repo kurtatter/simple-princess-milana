@@ -41,7 +41,6 @@ class TheatreParser:
                 config.RADARIO_QUERY_URL,
                 data
             )
-        print(events_response.json())
         return events_response.json()
 
     def save_to_file(self, filename: str = 'events') -> None:
@@ -64,7 +63,8 @@ class TheatreParser:
                 end_date=datetime.strptime(event.get('endDate'), '%Y-%m-%dT%H:%M:%S.%f%z'),
                 poster_image_url=event['posterImage']['url'],
                 sales_stopped=event.get('salesStopped'),
-                ended=event.get('ended')
+                ended=event.get('ended'),
+                revision=0
             ))
         session.commit()
 
