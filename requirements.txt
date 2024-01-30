@@ -4,3 +4,4 @@ alembic
 SQLAlchemy
 python-dotenv
 lxml
+aiogram
