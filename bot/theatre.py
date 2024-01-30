@@ -51,7 +51,7 @@ async def send_message_interval(message: Message):
 
 
 async def main():
-    scheduler.start()
+    # scheduler.start()
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 

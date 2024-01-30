@@ -52,6 +52,8 @@ class TheatreParser:
         from models import Event
         from datetime import datetime
 
+        print(session.query(Event).all())
+
         for event in events:
             session.add(Event(
                 event_id=event.get('id'),
